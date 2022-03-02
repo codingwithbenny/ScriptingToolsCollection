@@ -1,7 +1,9 @@
 const xlsx = require("xlsx")
 
 //reads the excel file and converts date to ISO format
-const wb = xlsx.readFile("2020_PS_Payroll.xlsx", { cellDates: true })
+const wb = xlsx.readFile("Name of your excel sheet and/or variable", {
+  cellDates: true,
+})
 
 const sheets = wb.SheetNames
 
@@ -44,10 +46,10 @@ const sheetNames = function () {
   //converts finalWBObjJSON into sheets format
   const newWS = xlsx.utils.json_to_sheet(finalWBObj)
   //places the new sheet inside of the new workbook with a tab named "Combined Data"
-  xlsx.utils.book_append_sheet(newWB, newWS, "Combined Data")
+  xlsx.utils.book_append_sheet(newWB, newWS, "Desired Sheet Name")
 
   //Takes the completed workbook and creates the excel file on PC with chosen name
-  xlsx.writeFile(newWB, "CombinedWagesTest.xlsx")
+  xlsx.writeFile(newWB, "DesiredName.xlsx")
   // console.log(finalWBObj)
 }
 //Calls the function

@@ -1,6 +1,8 @@
 const xlsx = require("xlsx")
 
-const wb = xlsx.readFile("Paint Payroll Details.xlsx", { cellDates: true })
+const wb = xlsx.readFile("Name of your excel sheet and/or variable", {
+  cellDates: true,
+})
 
 const sheets = wb.SheetNames
 
@@ -187,13 +189,13 @@ const seperateValues = () => {
   //places the new sheet inside of the new workbook with a tab named "Combined Data"
 
   //converts to excel sheet
-  xlsx.utils.book_append_sheet(newWB, newWS, "ADP Data")
+  xlsx.utils.book_append_sheet(newWB, newWS, "Desired Name")
 
   //Takes the completed workbook and creates the excel file on PC with chosen name
   // xlsx.writeFile(newWB, "CombinedDataADP.xlsx")
 
   //Takes the completed workbook and creates a csv file on PC with chosen name
-  xlsx.writeFile(newWB, "ADP Data.csv")
+  xlsx.writeFile(newWB, "Desired Name.csv")
 }
 
 //calls the entire process

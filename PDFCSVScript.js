@@ -1,7 +1,7 @@
 const fs = require("fs")
 const pdfparse = require("pdf-parse")
 const ObjectsToCsv = require("objects-to-csv")
-const pdffile = fs.readFileSync("sonoma+directory+2012.pdf")
+const pdffile = fs.readFileSync("Name of your PDF and/or variable.pdf")
 
 //This Script will convert a pdf into a readable csv file
 
@@ -116,5 +116,5 @@ pdfparse(pdffile).then(function (data) {
   const csv = new ObjectsToCsv(finalArray)
 
   //Saves CSV to pc
-  csv.toDisk("./SonomaDir.csv")
+  csv.toDisk("./DesiredName.csv")
 })
