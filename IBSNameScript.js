@@ -1,8 +1,6 @@
 const xlsx = require("xlsx")
 const ObjectsToCsv = require("objects-to-csv")
-const wb = xlsx.readFile("Name of your excel sheet and/or variable.xlsx", {
-  cellDates: true,
-})
+const wb = xlsx.readFile("July - December 2020.xlsx", { cellDates: true })
 
 const sheets = wb.SheetNames
 
@@ -12,6 +10,8 @@ const addName = (sheet) => {
   //converts the excel data to a workable JSON
   const data = xlsx.utils.sheet_to_json(ws)
 
+  //An array of all different types of codes
+  const codeTypes = []
   //Array with all of the raw data
   const messyData = []
   //Indexes of the split keyboard to vreak up into smaller arrays
@@ -37,19 +37,25 @@ const addName = (sheet) => {
       messyData.push(allValues[1])
     }
 
-    //If a cell in a row includes the word regular each of the values is pushed into messy data
-    if (allValues.includes("Regular")) {
+    //If a cell in a row includes the word 'regular' or 'Quarter Reconciliation Delta' each of the values is pushed into messy data
+    if (
+      allValues.includes("Regular") ||
+      allValues.includes("Quarter Reconciliation Delta")
+    ) {
       //Date
       messyData.push(allValues[1])
-      //Number
-      messyData.push(allValues[3])
       //Code
       messyData.push(allValues[4])
       //Record Amount
       messyData.push(allValues[7])
-      //Record Amount ER
-      messyData.push(allValues[8])
+
+      //This checks for the code in every row to add to our array for seperation
+      if (!codeTypes.includes(allValues[4])) {
+        codeTypes.push(allValues[4])
+      }
     }
+
+    //console.log(codeTypes)
   }
 
   //this is a one time push to the messy array to make sure final data is included, this is because the function grabs the values between two keyboards
@@ -76,42 +82,79 @@ const addName = (sheet) => {
   //This specific file contains junk data in the beginning so I get rid of it here
   cleanData.shift()
 
+  //This is an organized array of our combined objects
+  const organizeArray = []
+
   //This loops through each array in cleanData
   for (let y = 0; y < cleanData.length; y++) {
     //This Grabs the first and last name in each array and combines them
     let fullName = cleanData[y][0] + " " + cleanData[y][1]
 
-    //This loops through each value in each array
+    //This function loops through each value of cleanData[y]
     for (let z = 0; z < cleanData[y].length; z++) {
-      //Here we test to see if the value is an instance of a Date, if so, we know our place
+      //The Final object will require a name and date to reference
+      let finalObj = {
+        Name: fullName,
+        Date: "",
+      }
+
+      //Adds each code to the object as a key and sets it equal to 0
+      for (let i = 0; i < codeTypes.length; i++) {
+        finalObj[codeTypes[i]] = 0
+      }
+
+      //Looks for every instance of a Date
       if (cleanData[y][z] instanceof Date) {
-        //These two convert the date to normal mm-dd-yyyy format
+        //Sets the date to a usable format
         let date = new Date(cleanData[y][z])
-        let niceDate = date.toISOString().substring(0, 10)
+        let newDate = date.toISOString().substring(0, 10)
 
-        //Using the date index, we place each value we need in an object
-        const finalObj = {
-          Name: fullName,
-          Date: niceDate,
-          Number: cleanData[y][z + 1],
-          Code: cleanData[y][z + 2],
-          RecordAmount: cleanData[y][z + 3],
-          RecordAmountER: cleanData[y][z + 4],
+        //Sets date in final Object
+        finalObj["Date"] = newDate
+
+        //looks to see if the value of the code is a number or a -
+        if (cleanData[y][z + 2] === "-") {
+          //if - set code to 0
+          finalObj[cleanData[y][z + 1]] += 0
+        } else {
+          //else add the amount to the code
+          finalObj[cleanData[y][z + 1]] += cleanData[y][z + 2]
         }
-
-        //We grab our final object and place it in the final array
-        finalArray.push(finalObj)
+        //sends the object up to the organized array
+        organizeArray.push(finalObj)
       }
     }
   }
 
-  console.log(finalArray)
+  //This is used to merge objects with the same name and date and add the sums
+  let helper = {}
+  let result = organizeArray.reduce(function (r, o) {
+    //key
+    let key = o.Name + "-" + o.Date
 
-  //this package turns out data into a csv
-  const csv = new ObjectsToCsv(finalArray)
+    if (!helper[key]) {
+      // create a copy of the object
+      helper[key] = Object.assign({}, o)
+      console.log(helper[key])
+      //places the copy in the accumulator
+      r.push(helper[key])
+    } else {
+      //for every helper, find the codeType key, grab the value that correlates, and add on to helper
+      for (let i = 0; i < codeTypes.length; i++) {
+        helper[key][codeTypes[i]] += o[codeTypes[i]]
+      }
+    }
+
+    return r
+  }, [])
+
+  //console.log(result)
+
+  // //this package turns out data into a csv
+  const csv = new ObjectsToCsv(result)
 
   //the csv is then saved to your disk
-  csv.toDisk("./DesiredName.csv")
+  //csv.toDisk("./IBS.csv")
 }
 
 addName()
