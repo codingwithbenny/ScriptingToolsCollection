@@ -1,6 +1,6 @@
 const xlsx = require("xlsx")
 const ObjectsToCsv = require("objects-to-csv")
-const wb = xlsx.readFile("Name of your excel sheet and/or variable.xlsx", {
+const wb = xlsx.readFile("Larkspur Employee Wages 2020 to 2021.xlsx", {
   cellDates: true,
 })
 const sheets = wb.SheetNames
@@ -12,6 +12,7 @@ const addDate = (sheet) => {
   //converts the excel data to a workable JSON
   const data = xlsx.utils.sheet_to_json(ws)
 
+  const payrollTypes = []
   //Array with all of the raw data
   const messyData = []
   //Indexes of the split keyboard to vreak up into smaller arrays
@@ -40,8 +41,15 @@ const addDate = (sheet) => {
         messyData.push(allValues)
         //Sets the current employee equal to the first instance in order to grab everytime their name pops up
         currentEmp = allValues[3]
+
+        if (!payrollTypes.includes(allValues[4])) {
+          payrollTypes.push(allValues[4])
+        }
       } else if (allValues[0] === currentEmp) {
         //Pushes a row if the employee matches from the start of the row
+        if (!payrollTypes.includes(allValues[1])) {
+          payrollTypes.push(allValues[1])
+        }
         messyData.push(allValues)
       }
     }
@@ -83,10 +91,15 @@ const addDate = (sheet) => {
           const finalObj = {
             Date: niceDate,
             Name: cleanData[i][0][3],
-            PayrollItem: cleanData[i][0][4],
-            WageBase: cleanData[i][0][5],
-            Amount: cleanData[i][0][6],
           }
+
+          for (let z = 0; z < payrollTypes.length; z++) {
+            finalObj[payrollTypes[z]] = 0
+          }
+          const newSum = finalObj[cleanData[i][0][4]] + cleanData[i][0][6]
+
+          finalObj[cleanData[i][0][4]] = Math.round(newSum * 100) / 100
+
           //pushes the final object
           finalArray.push(finalObj)
         } else {
@@ -95,9 +108,17 @@ const addDate = (sheet) => {
             Date: niceDate,
             Name: cleanData[i][x][0],
             PayrollItem: cleanData[i][x][1],
-            WageBase: cleanData[i][x][2],
             Amount: cleanData[i][x][3],
           }
+
+          for (let z = 0; z < payrollTypes.length; z++) {
+            finalObj[payrollTypes[z]] = 0
+          }
+
+          const newSum = finalObj[cleanData[i][x][1]] + cleanData[i][x][3]
+
+          finalObj[cleanData[i][x][1]] = Math.round(newSum * 100) / 100
+
           //pushes the final object
           finalArray.push(finalObj)
         }
@@ -105,13 +126,38 @@ const addDate = (sheet) => {
     }
   }
 
-  console.log(finalArray)
+  //console.log(finalArray[11])
+
+  //This is used to merge objects with the same name and date and add the sums
+  let helper = {}
+  let resultArray = finalArray.reduce(function (r, o) {
+    //key
+    let key = o.Name + "-" + o.Date
+
+    if (!helper[key]) {
+      // create a copy of the object
+      helper[key] = Object.assign({}, o)
+      //console.log(helper[key])
+      //places the copy in the accumulator
+      r.push(helper[key])
+    } else {
+      //for every helper, find the codeType key, grab the value that correlates, and add on to helper
+      for (let i = 0; i < payrollTypes.length; i++) {
+        //console.log(helper[key][payrollTypes[i]])
+
+        const newSum = helper[key][payrollTypes[i]] + o[payrollTypes[i]]
+        helper[key][payrollTypes[i]] = Math.round(newSum * 100) / 100
+      }
+    }
+
+    return r
+  }, [])
 
   //this package turns out data into a csv
-  const csv = new ObjectsToCsv(finalArray)
+  const csv = new ObjectsToCsv(resultArray)
 
   //the csv is then saved to your disk
-  csv.toDisk("./DesiredName.csv")
+  csv.toDisk("./IBSWithDates.csv")
 }
 
 addDate()
