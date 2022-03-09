@@ -1,6 +1,6 @@
 const xlsx = require("xlsx")
 const ObjectsToCsv = require("objects-to-csv")
-const wb = xlsx.readFile("Larkspur Employee Wages 2020 to 2021.xlsx", {
+const wb = xlsx.readFile("IBSSheet.xlsx", {
   cellDates: true,
 })
 const sheets = wb.SheetNames
@@ -157,7 +157,7 @@ const addDate = (sheet) => {
   const csv = new ObjectsToCsv(resultArray)
 
   //the csv is then saved to your disk
-  csv.toDisk("./IBSWithDates.csv")
+  csv.toDisk("./PreferedName.csv")
 }
 
 addDate()

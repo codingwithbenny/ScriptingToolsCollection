@@ -1,6 +1,6 @@
 const xlsx = require("xlsx")
 const ObjectsToCsv = require("objects-to-csv")
-const wb = xlsx.readFile("July - December 2020.xlsx", { cellDates: true })
+const wb = xlsx.readFile("IBSExcel.xlsx", { cellDates: true })
 
 const sheets = wb.SheetNames
 
@@ -154,7 +154,7 @@ const addName = (sheet) => {
   const csv = new ObjectsToCsv(result)
 
   //the csv is then saved to your disk
-  //csv.toDisk("./IBS.csv")
+  csv.toDisk("./PreferedName.csv")
 }
 
 addName()
